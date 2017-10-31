@@ -13,6 +13,17 @@
                     "regex": "^[a-z0-9]{1,25}$",
                     "validationMessage": "Only lowercase letters and numbers are allowed, and the value must be 1-25 characters long."
                 }
+            },
+            {
+                "name": "templateBaseUrl",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Template Files URL",
+                "defaultValue": "https://raw.githubusercontent.com/puppetlabs/AzureStack/master/Puppet.PuppetEnterprise.2017.2.1/DeploymentTemplates",
+                "toolTip": "Specify the URL of where the additional Puppet Enterprise JSON template files can be found",
+                "constraints": {
+                    "required": true,
+                    "validationMessage": "Please use a correctly formatted URL."
+                }
             }
         ],
         "steps": [
@@ -193,6 +204,7 @@
         ],
         "outputs": {
             "puppetMasterVmName": "[steps('basicsStep').puppetMasterVmName]",
+            "templateBaseUrl": "[steps('basicsStep').templateBaseUrl]",
             "vmSize": "[steps('settings').Compute.vmSize]",
             "adminUsername": "[steps('settings').Compute.adminUsername]",
             "adminPassword": "[steps('settings').Compute.adminPassword.password]",

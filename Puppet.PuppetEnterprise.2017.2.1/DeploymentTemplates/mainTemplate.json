@@ -159,7 +159,7 @@
             "type": "string",
             "metadata": {
                 "artifactsBaseUrl": "",
-                "description": "URL to acquire other templates"
+                "description": "Specify the URL of where the additional Puppet Enterprise JSON template files can be found"
             },
             "defaultValue": "https://raw.githubusercontent.com/puppetlabs/AzureStack/master/Puppet.PuppetEnterprise.2017.2.1/DeploymentTemplates"
         }
