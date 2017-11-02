@@ -31,8 +31,8 @@
         }
     },
     "variables": {
-        "imagePublisher": "Puppet",
-        "imageOffer": "Puppet-Enterprise",
+        "imagePublisher": "puppet",
+        "imageOffer": "puppet-enterprise",
         "imageSku": "2017-2",
         "version": "latest"
     },
