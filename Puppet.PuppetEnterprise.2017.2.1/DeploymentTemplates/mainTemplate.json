@@ -148,6 +148,34 @@
             },
             "defaultValue": ""
         },
+        "diagnosticStorageAccountNewOrExisting": {
+            "type": "string",
+            "defaultValue": "new",
+            "metadata": {
+                "description": "Storage Acccount New or Existing"
+            }
+        },
+        "diagnosticStorageAccountName": {
+            "type": "string",
+            "defaultValue": "puppetstor",
+            "metadata": {
+                "description": "Storage Acccount Name"
+            }
+        },
+        "diagnosticStorageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "metadata": {
+                "description": "Storage Acccount Type"
+            }
+        },
+        "diagnosticStorageAccountResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Resouce Group of the storage account to use for Virtual Machine disks"
+            },
+            "defaultValue": ""
+        },
         "nicName": {
             "type": "string",
             "defaultValue": "puppetmaster_nic",
@@ -166,6 +194,7 @@
     },
     "variables": {
         "storageAccountSetupUrl": "[concat(parameters('templateBaseUrl'),'/storage-',parameters('storageAccountNewOrExisting'),'.json')]",
+        "diagnosticStorageAccountSetupUrl": "[concat(parameters('templateBaseUrl'),'/storage-',parameters('diagnosticStorageAccountNewOrExisting'),'.json')]",
         "publicIpAddressSetupUrl": "[concat(parameters('templateBaseUrl'),'/publicip-',parameters('publicIPAddressNewOrExisting'),'.json')]",
         "vnetSetupUrl": "[concat(parameters('templateBaseUrl'),'/vnet-',parameters('virtualNetworkNewOrExisting'),'.json')]",
         "vmSetupUrl": "[concat(parameters('templateBaseUrl'),'/compute-',parameters('authenticationType'),'.json')]",
@@ -191,6 +220,29 @@
                     },
                     "storageAccountName": {
                         "value": "[parameters('storageAccountName')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "SettingUpDiagnosticStorageAccount",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('diagnosticStorageAccountSetupUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountType": {
+                        "value": "[parameters('diagnosticStorageAccountType')]"
+                    },
+                    "storageAccountResourceGroup": {
+                        "value": "[parameters('diagnosticStorageAccountResourceGroup')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('diagnosticStorageAccountName')]"
                     }
                 }
             }
@@ -329,6 +381,12 @@
                     },
                     "storageAccountResourceGroup": {
                         "value": "[parameters('storageAccountResourceGroup')]"
+                    },
+                    "storageAccountResourceGroup": {
+                        "value": "[parameters('diagnosticStorageAccountResourceGroup')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('diagnosticStorageAccountName')]"
                     },
                     "fqdn": {
                         "value": "[reference('SettingUpPublicIPs').outputs.fqdn.value]"
