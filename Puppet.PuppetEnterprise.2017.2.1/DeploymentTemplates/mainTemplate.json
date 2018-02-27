@@ -157,7 +157,7 @@
         },
         "diagnosticStorageAccountName": {
             "type": "string",
-            "defaultValue": "puppetstor",
+            "defaultValue": "puppetdiagstor",
             "metadata": {
                 "description": "Storage Acccount Name"
             }
@@ -228,6 +228,9 @@
             "name": "SettingUpDiagnosticStorageAccount",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/SettingUpStorageAccount"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
