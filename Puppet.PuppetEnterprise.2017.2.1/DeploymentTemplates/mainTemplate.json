@@ -352,6 +352,8 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
+                "Microsoft.Resources/deployments/SettingUpStorageAccount",
+                "Microsoft.Resources/deployments/SettingUpDiagnosticStorageAccount",
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
             ],
             "properties": {
