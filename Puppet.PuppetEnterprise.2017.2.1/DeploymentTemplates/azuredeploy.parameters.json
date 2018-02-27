@@ -2,16 +2,19 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "puppetMasterVmName": {
-      "value": "puppetmaster"
+    "vmName": {
+      "value": "mysqlvm"
     },
     "vmSize": {
       "value": "Standard_D3_v2"
     },
     "adminUsername": {
-      "value": "puppetadmin"
+      "value": "mysqladmin"
     },
     "adminPassword": {
+      "value": ""
+    },
+    "mySQLPassword": {
       "value": ""
     },
     "sshPublicKey": {
@@ -21,7 +24,7 @@
       "value": "password"
     },
     "virtualNetworkName": {
-      "value": "puppet_vnet"
+      "value": "mysql_vnet"
     },
     "virtualNetworkAddressPrefix": {
       "value": "10.0.0.0/16"
@@ -30,28 +33,22 @@
       "value": "new"
     },
     "virtualNetworkSubnetName": {
-      "value": "puppet_subnet"
+      "value": "mysql_subnet"
     },
     "virtualNetworkSubnetAddressPrefix": {
       "value": "10.0.0.0/24"
     },
-    "virtualNetworkResourceGroup": {
-      "value": ""
-    },
     "publicIPAddressName": {
-      "value": "puppetmaster_ip"
+      "value": "mysql_ip"
     },
     "publicIPAddressDomainNameLabel": {
-      "value": "puppetmaster"
+      "value": "mysql"
     },
     "publicIPAddressNewOrExisting": {
       "value": "new"
     },
-    "publicIPAddressResourceGroup": {
-      "value": ""
-    },
     "storageAccountName": {
-      "value": "puppetstor"
+      "value": "mysqlstor"
     },
     "storageAccountType": {
       "value": "Standard_LRS"
@@ -59,14 +56,14 @@
     "storageAccountNewOrExisting": {
       "value": "new"
     },
-    "storageAccountResourceGroup": {
+    "resourceGroupName": {
       "value": ""
     },
-    "nicName": {
-      "value": "puppetmaster_nic"
-    },
     "templateBaseUrl": {
-      "value": "https://raw.githubusercontent.com/puppetlabs/AzureStack/master/Puppet.PuppetEnterprise.2017.2.1/DeploymentTemplates"
+      "value": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/packages/MySQL/DevOpsToolkit.MySQL/DeploymentTemplates/"
+    },
+    "scriptBaseUrl": {
+      "value": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/scripts/"
     }
   }
 }

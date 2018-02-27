@@ -4,10 +4,10 @@
     "parameters": {
         "basics": [
             {
-                "name": "puppetMasterVmName",
+                "name": "vmName",
                 "type": "Microsoft.Common.TextBox",
-                "label": "Puppet Enterprise Master VM Name",
-                "defaultValue": "puppetmaster",
+                "label": "MySQL Virtual Machine Name",
+                "defaultValue": "mysql",
                 "constraints": {
                     "required": true,
                     "regex": "^[a-z0-9]{1,25}$",
@@ -18,11 +18,22 @@
                 "name": "templateBaseUrl",
                 "type": "Microsoft.Common.TextBox",
                 "label": "Template Files URL",
-                "defaultValue": "https://raw.githubusercontent.com/puppetlabs/AzureStack/master/Puppet.PuppetEnterprise.2017.2.1/DeploymentTemplates",
-                "toolTip": "Specify the URL of where the additional Puppet Enterprise JSON template files can be found",
+                "defaultValue": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/packages/MySQL/DevOpsToolkit.MySQL/DeploymentTemplates/",
+                "toolTip": "Specify the URL of where the additional MySQL JSON template files can be found",
                 "constraints": {
                     "required": true,
-                    "validationMessage": "Please use a correctly formatted URL."
+                    "validationMessage": "Please use a correctly formatted URL, ending with the containing folder."
+                }
+            },
+            {
+                "name": "scriptBaseUrl",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Script URL",
+                "defaultValue": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/scripts/",
+                "toolTip": "Specify the URL of where the MySQL Custom Script can be found",
+                "constraints": {
+                    "required": true,
+                    "validationMessage": "Please use a correctly formatted URL, ending with the containing folder."
                 }
             }
         ],
@@ -45,8 +56,8 @@
                                 "name": "adminUsername",
                                 "type": "Microsoft.Compute.UserNameTextBox",
                                 "label": "Username",
-                                "defaultValue": "puppetadmin",
-                                "toolTip": "Admin username for the Puppet Enterprise master",
+                                "defaultValue": "mysqladmin",
+                                "toolTip": "Admin username for the MySQL virtual machine",
                                 "osPlatform": "Linux",
                                 "constraints": {
                                     "required": true
@@ -76,6 +87,22 @@
                                 "osPlatform": "Linux",
                                 "visible": true
                             },
+                            {
+                                "name": "mySQLPassword",
+                                "type": "Microsoft.Common.PasswordBox",
+                                "label": {
+                                  "password": "Password for MySQL Database Server",
+                                  "confirmPassword": "Confirm password"
+                                },
+                                "toolTip": "Password for MySQL Database Server",
+                                "constraints": {
+                                  "required": true
+                                },
+                                "options": {
+                                  "hideConfirmation": false
+                                },
+                                "visible": true
+                              },
                             {
                                 "name": "vmSize",
                                 "type": "Microsoft.Compute.SizeSelector",
@@ -117,12 +144,12 @@
                                     "domainNameLabel": "DNS label"
                                 },
                                 "toolTip": {
-                                    "publicIpAddress": "Public IP address for Puppet Enterprise master",
-                                    "domainNameLabel": "DNS label for Puppet Enterprise master"
+                                    "publicIpAddress": "Public IP address for the MySQL virtual machine",
+                                    "domainNameLabel": "DNS label for the MySQL virtual machine"
                                 },
                                 "defaultValue": {
-                                    "publicIpAddressName": "puppetmaster_ip",
-                                    "domainNameLabel": "[concat('puppetmaster',substring(guid(),0,4))]"
+                                    "publicIpAddressName": "mysql_ip",
+                                    "domainNameLabel": "[concat('mysql',substring(guid(),0,4))]"
                                 },
                                 "options": {
                                     "hideNone": true,
@@ -143,10 +170,10 @@
                                 },
                                 "toolTip": {
                                     "virtualNetwork": "Virtual Network Name",
-                                    "subnets": "Subnets requied for Puppet Enterprise"
+                                    "subnets": "Subnets requied for the MySQL virtual machine"
                                 },
                                 "defaultValue": {
-                                    "name": "puppetmaster_vnet",
+                                    "name": "mysql_vnet",
                                     "addressPrefixSize": "/24"
                                 },
                                 "constraints": {
@@ -154,9 +181,9 @@
                                 },
                                 "subnets": {
                                     "subnet1": {
-                                        "label": "Puppet subnet",
+                                        "label": "MySQL subnet",
                                         "defaultValue": {
-                                            "name": "puppetmaster_subnet",
+                                            "name": "mysql_subnet",
                                             "addressPrefixSize": "/24"
                                         },
                                         "constraints": {
@@ -181,7 +208,7 @@
                                 "label": "Storage account",
                                 "toolTip": "Storage account for the Virtual Machine disks",
                                 "defaultValue": {
-                                    "name": "[concat('puppetstor',substring(guid(),0,4))]",
+                                    "name": "[concat('mysqlstor',substring(guid(),0,4))]",
                                     "type": "Standard_LRS"
                                 },
                                 "constraints": {
@@ -203,25 +230,23 @@
             }
         ],
         "outputs": {
-            "puppetMasterVmName": "[steps('basicsStep').puppetMasterVmName]",
+            "vmName": "[steps('basicsStep').vmName]",
             "templateBaseUrl": "[steps('basicsStep').templateBaseUrl]",
+            "scriptBaseUrl": "[steps('basicsStep').scriptBaseUrl]",
             "vmSize": "[steps('settings').Compute.vmSize]",
             "adminUsername": "[steps('settings').Compute.adminUsername]",
             "adminPassword": "[steps('settings').Compute.adminPassword.password]",
+            "mySQLPassword": "[steps('settings').Compute.mySQLPassword.password]",
             "sshPublicKey": "[steps('settings').Compute.adminPassword.sshPublicKey]",
             "authenticationType": "[steps('settings').Compute.adminPassword.authenticationType]",
             "publicIPAddressName": "[steps('settings').Network.ipAddress.name]",
-            "publicIPAddressResourceGroup": "[steps('settings').Network.ipAddress.resourceGroup]",
             "publicIPAddressDomainNameLabel": "[steps('settings').Network.ipAddress.domainNameLabel]",
             "publicIPAddressNewOrExisting": "[steps('settings').Network.ipAddress.newOrExistingOrNone]",
-            "resourceGroupName": "[steps('settings').Storage.storageAccount.resourceGroup]",
             "virtualNetworkAddressPrefix": "[steps('settings').Network.virtualNetwork.addressPrefix]",
             "virtualNetworkName": "[steps('settings').Network.virtualNetwork.name]",
             "virtualNetworkNewOrExisting": "[steps('settings').Network.virtualNetwork.newOrExisting]",
             "virtualNetworkSubnetName": "[steps('settings').Network.virtualNetwork.subnets.subnet1.name]",
             "virtualNetworkSubnetAddressPrefix": "[steps('settings').Network.virtualNetwork.subnets.subnet1.addressPrefix]",
-            "virtualNetworkResourceGroup": "[steps('settings').Network.virtualNetwork.resourceGroup]",
-            "storageAccountResourceGroup": "[steps('settings').Storage.storageAccount.resourceGroup]",
             "storageAccountName": "[steps('settings').Storage.storageAccount.name]",
             "storageAccountType": "[steps('settings').Storage.storageAccount.type]",
             "storageAccountNewOrExisting": "[steps('settings').Storage.storageAccount.newOrExisting]"

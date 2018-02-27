@@ -2,9 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "puppetMasterVmName": {
+        "vmName": {
             "type": "string",
-            "defaultValue": "puppetmaster",
+            "defaultValue": "mysql",
             "metadata": {
                 "description": "VM Name"
             }
@@ -18,7 +18,7 @@
         },
         "adminUsername": {
             "type": "string",
-            "defaultValue": "puppetadmin",
+            "defaultValue": "mysqladmin",
             "metadata": {
                 "description": "Admin user name"
             }
@@ -37,6 +37,13 @@
                 "description": "Admin password"
             }
         },
+        "mySQLPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Password fro MySQL Database Server"
+            }
+        },
         "sshPublicKey": {
             "type": "securestring",
             "defaultValue": "",
@@ -53,7 +60,7 @@
         },
         "virtualNetworkName": {
             "type": "string",
-            "defaultValue": "puppet_vnet",
+            "defaultValue": "mysql_vnet",
             "metadata": {
                 "description": "Virtual Network Name"
             }
@@ -67,7 +74,7 @@
         },
         "virtualNetworkSubnetName": {
             "type": "string",
-            "defaultValue": "puppet_subnet",
+            "defaultValue": "mysql_subnet",
             "metadata": {
                 "description": "Virtual Network subnet name"
             }
@@ -79,13 +86,6 @@
                 "description": "Virtual Network subnet address prefix"
             }
         },
-        "virtualNetworkResourceGroup": {
-            "type": "string",
-            "metadata": {
-                "description": "Resouce Group of the virtual network"
-            },
-            "defaultValue": ""
-        },
         "publicIPAddressNewOrExisting": {
             "type": "string",
             "defaultValue": "new",
@@ -95,26 +95,19 @@
         },
         "publicIPAddressName": {
             "type": "string",
-            "defaultValue": "puppetmaster_ip",
+            "defaultValue": "mysql_ip",
             "metadata": {
                 "description": "Public IP Address Name"
             }
         },
         "publicIPAddressDomainNameLabel": {
             "type": "string",
-            "defaultValue": "puppetmaster",
+            "defaultValue": "mysql",
             "metadata": {
                 "description": "Public IP domain name prefix"
             }
         },
-        "publicIPAddressResourceGroup": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Public IP Adresseses Resource Group"
-            },
-            "defaultValue": ""
-        },
-        "rgName": {
+        "resourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the resource group into which everything will be deployed"
@@ -124,47 +117,50 @@
             "type": "string",
             "defaultValue": "new",
             "metadata": {
-                "description": "Storage Acccount New or Existing"
+                "description": "Storage Account New or Existing"
             }
         },
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "puppetstor",
+            "defaultValue": "mysqlstor",
             "metadata": {
-                "description": "Storage Acccount Name"
+                "description": "Storage Account Name"
             }
         },
         "storageAccountType": {
             "type": "string",
             "defaultValue": "Standard_LRS",
             "metadata": {
-                "description": "Storage Acccount Type"
-            }
-        },
-        "storageAccountResourceGroup": {
-            "type": "string",
-            "metadata": {
-                "description": "Resouce Group of the storage account to use for Virtual Machine disks"
-            },
-            "defaultValue": ""
-        },
-        "nicName": {
-            "type": "string",
-            "defaultValue": "puppetmaster_nic",
-            "metadata": {
-                "description": "NIC name"
+                "description": "Storage Account Type"
             }
         },
         "templateBaseUrl": {
             "type": "string",
             "metadata": {
                 "artifactsBaseUrl": "",
-                "description": "Specify the URL of where the additional Puppet Enterprise JSON template files can be found"
+                "description": "Specify the URL of where the additional MySQL JSON template files can be found"
             },
-            "defaultValue": "https://raw.githubusercontent.com/puppetlabs/AzureStack/master/Puppet.PuppetEnterprise.2017.2.1/DeploymentTemplates"
+            "defaultValue": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/packages/MySQL/DevOpsToolkit.MySQL/DeploymentTemplates/"
+        },
+        "scriptBaseUrl": {
+            "type": "string",
+            "metadata": {
+                "artifactsBaseUrl": "",
+                "description": "Specify the URL of where the MySQL install script can be found"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/mattmcspirit/azurestack/MySQL/scripts/"
         }
     },
     "variables": {
+        "storageAccountResourceGroup": "[resourceGroup().name]",
+        "virtualNetworkResourceGroup": "[resourceGroup().name]",
+        "publicIPAddressResourceGroup": "[resourceGroup().name]",
+        "nsgName": "[concat(parameters('vmName'), '_nsg')]",
+        "nicName": "[concat(parameters('vmName'), '_nic')]",
+        "imagePublisher": "Canonical",
+        "imageOffer": "UbuntuServer",
+        "imageSku": "16.04-LTS",
+        "imageVersion": "latest",
         "storageAccountSetupUrl": "[concat(parameters('templateBaseUrl'),'/storage-',parameters('storageAccountNewOrExisting'),'.json')]",
         "publicIpAddressSetupUrl": "[concat(parameters('templateBaseUrl'),'/publicip-',parameters('publicIPAddressNewOrExisting'),'.json')]",
         "vnetSetupUrl": "[concat(parameters('templateBaseUrl'),'/vnet-',parameters('virtualNetworkNewOrExisting'),'.json')]",
@@ -173,7 +169,7 @@
     },
     "resources": [
         {
-            "name": "SettingUpStorageAccount",
+            "name": "ProvisioningStorageAccount",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "properties": {
@@ -187,7 +183,7 @@
                         "value": "[parameters('storageAccountType')]"
                     },
                     "storageAccountResourceGroup": {
-                        "value": "[parameters('storageAccountResourceGroup')]"
+                        "value": "[variables('storageAccountResourceGroup')]"
                     },
                     "storageAccountName": {
                         "value": "[parameters('storageAccountName')]"
@@ -196,7 +192,7 @@
             }
         },
         {
-            "name": "SettingUpNetworkSecurityGroup",
+            "name": "ProvisioningNetworkSecurityGroup",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [],
@@ -206,15 +202,19 @@
                     "uri": "[variables('networkSecurityGroupSetupUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
-                "parameters": {}
+                "parameters": {
+                    "nsgName": {
+                        "value": "[variables('nsgName')]"
+                    }
+                }
             }
         },
         {
-            "name": "SettingUpVirtualNetwork",
+            "name": "ProvisioningVirtualNetwork",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/SettingUpNetworkSecurityGroup"
+                "Microsoft.Resources/deployments/ProvisioningNetworkSecurityGroup"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -227,7 +227,7 @@
                         "value": "[parameters('virtualNetworkName')]"
                     },
                     "virtualNetworkResourceGroup": {
-                        "value": "[parameters('virtualNetworkResourceGroup')]"
+                        "value": "[variables('virtualNetworkResourceGroup')]"
                     },
                     "virtualNetworkAddressPrefix": {
                         "value": "[parameters('virtualNetworkAddressPrefix')]"
@@ -237,12 +237,15 @@
                     },
                     "virtualNetworkSubnetAddressPrefix": {
                         "value": "[parameters('virtualNetworkSubnetAddressPrefix')]"
+                    },
+                    "nsgName": {
+                        "value": "[variables('nsgName')]"
                     }
                 }
             }
         },
         {
-            "name": "SettingUpPublicIPs",
+            "name": "ProvisioningPublicIPs",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [],
@@ -257,7 +260,7 @@
                         "value": "[parameters('publicIPAddressName')]"
                     },
                     "publicIPAddressResourceGroup": {
-                        "value": "[parameters('publicIPAddressResourceGroup')]"
+                        "value": "[variables('publicIPAddressResourceGroup')]"
                     },
                     "publicIPAddressDomainNameLabel": {
                         "value": "[parameters('publicIPAddressDomainNameLabel')]"
@@ -268,16 +271,16 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('nicName')]",
+            "name": "[variables('nicName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "Microsoft.Resources/deployments/SettingUpPublicIPs",
-                "Microsoft.Resources/deployments/SettingUpVirtualNetwork",
-                "Microsoft.Resources/deployments/SettingUpNetworkSecurityGroup"
+                "Microsoft.Resources/deployments/ProvisioningPublicIPs",
+                "Microsoft.Resources/deployments/ProvisioningVirtualNetwork",
+                "Microsoft.Resources/deployments/ProvisioningNetworkSecurityGroup"
             ],
             "properties": {
                 "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups','puppet_nsg')]"
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]"
                 },
                 "ipConfigurations": [
                     {
@@ -285,10 +288,10 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[reference('SettingUpPublicIPs').outputs.publicIpId.value]"
+                                "id": "[reference('ProvisioningPublicIPs').outputs.publicIpId.value]"
                             },
                             "subnet": {
-                                "id": "[reference('SettingUpVirtualNetwork').outputs.subnetRef.value]"
+                                "id": "[reference('ProvisioningVirtualNetwork').outputs.subnetRef.value]"
                             }
                         }
                     }
@@ -296,12 +299,12 @@
             }
         },
         {
-            "name": "ProvisioningPuppetEnterprise",
+            "name": "ProvisioningVirtualMachine",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/SettingUpStorageAccount",
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
+                "Microsoft.Resources/deployments/ProvisioningStorageAccount",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -310,17 +313,32 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "puppetMasterVmName": {
-                        "value": "[parameters('puppetMasterVmName')]"
+                    "vmName": {
+                        "value": "[parameters('vmName')]"
                     },
                     "vmSize": {
                         "value": "[parameters('vmSize')]"
+                    },
+                    "imagePublisher": {
+                        "value": "[variables('imagePublisher')]"
+                    },
+                    "imageOffer": {
+                        "value": "[variables('imageOffer')]"
+                    },
+                    "imageSku": {
+                        "value": "[variables('imageSku')]"
+                    },
+                    "imageVersion": {
+                        "value": "[variables('imageVersion')]"
                     },
                     "adminUserName": {
                         "value": "[parameters('adminUserName')]"
                     },
                     "adminPassword": {
                         "value": "[parameters('adminPassword')]"
+                    },
+                    "mySQLPassword": {
+                        "value": "[parameters('mySQLPassword')]"
                     },
                     "sshPublicKey": {
                         "value": "[parameters('sshPublicKey')]"
@@ -329,26 +347,30 @@
                         "value": "[parameters('storageAccountName')]"
                     },
                     "storageAccountResourceGroup": {
-                        "value": "[parameters('storageAccountResourceGroup')]"
-                    },
-                    "fqdn": {
-                        "value": "[reference('SettingUpPublicIPs').outputs.fqdn.value]"
+                        "value": "[variables('storageAccountResourceGroup')]"
                     },
                     "nicName": {
-                        "value": "[parameters('nicName')]"
+                        "value": "[variables('nicName')]"
+                    },
+                    "scriptBaseUrl": {
+                        "value": "[parameters('scriptBaseUrl')]"
                     }
                 }
             }
         }
     ],
     "outputs": {
-        "Puppet Enterprise Console FQDN:": {
-            "value": "[concat('https://',reference('SettingUpPublicIPs').outputs.fqdn.value)]",
+        "MySQLVMFQDN:": {
+            "value": "[reference('ProvisioningPublicIPs').outputs.fqdn.value]",
             "type": "string"
         },
-        "Puppet Enterprise Console Username:": {
-            "value": "admin",
-            "type": "string"
+        "MySQLAdminUsername ": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        },
+        "MySQLDatabaseUsername ": {
+            "type": "string",
+            "value": "root"
         }
     }
 }
