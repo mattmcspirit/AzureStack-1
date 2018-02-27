@@ -172,7 +172,7 @@
         "diagnosticStorageAccountResourceGroup": {
             "type": "string",
             "metadata": {
-                "description": "Resouce Group of the storage account to use for Virtual Machine disks"
+                "description": "Resouce Group of the storage account to use for diagnostics"
             },
             "defaultValue": ""
         },
