@@ -114,7 +114,7 @@
             },
             "defaultValue": ""
         },
-        "resourceGroupName": {
+        "rgName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the resource group into which everything will be deployed"
